@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>ZRAN — Dashboard</title>
+<link rel="icon" href="https://files.catbox.moe/xngrqz.png">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:#fff;font-family:"Courier New",monospace}
+button,input,textarea{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+.page{width:min(900px,calc(100% - 24px));margin:auto;padding:20px 0 40px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 22px}
+.brand{font-size:24px;font-weight:bold;letter-spacing:4px}
+.brand span{color:#777}
+.header-right{display:flex;align-items:center;gap:10px}
+.online{font-size:12px;color:#ccc}
+.online:before{content:"";display:inline-block;width:7px;height:7px;background:#fff;border-radius:50%;margin-right:7px}
+.menu-wrap{position:relative}
+.menu-button{padding:10px;background:#000;color:white;border:1px solid white}
+.dropdown{display:none;position:absolute;right:0;top:45px;width:210px;z-index:20;padding:6px;background:#050505;border:1px solid white}
+.dropdown.show{display:block}
+.dropdown a{display:block;padding:12px;border-bottom:1px solid #222;font-size:13px}
+.dropdown a:hover{background:#fff;color:#000}
+
+.card{border:2px solid #eee;margin-bottom:25px;background:#030303}
+.profile{display:flex;align-items:center;gap:25px;padding:25px}
+.avatar{width:145px;height:145px;object-fit:cover;background:#111;border:1px solid #fff}
+.profile-info{min-width:0;flex:1}
+.profile-name{font-size:clamp(25px,5vw,42px);margin:0 0 22px;overflow-wrap:anywhere}
+.profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.info-item{display:flex;align-items:center;gap:10px;font-size:14px;min-width:0}
+.info-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin:32px 0 16px}
+.section-title h2{font-size:17px;letter-spacing:2px}
+.section-title small{font-size:10px;color:#888}
+
+.menu-card{display:flex;align-items:center;gap:22px;min-height:155px;padding:22px;margin-bottom:18px;border:2px solid #eee;position:relative;overflow:hidden;background:#000}
+.menu-card:hover{background:#101010}
+.menu-icon{width:100px;height:100px;display:grid;place-items:center;border:2px solid white;font-size:38px;flex-shrink:0}
+.menu-content{flex:1;min-width:0;z-index:1}
+.menu-content h3{font-size:clamp(18px,3.5vw,28px);margin:0 0 10px}
+.menu-content p{font-size:clamp(12px,2.5vw,18px);line-height:1.8;color:#999;margin:0}
+.arrow{font-size:35px;z-index:1}
+.menu-card:after{content:attr(data-watermark);position:absolute;right:30px;bottom:-40px;font-size:140px;color:#111;font-weight:bold;pointer-events:none}
+
+.tools-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.tool{padding:18px;border:1px solid #555;background:#050505}
+.tool-icon{font-size:25px}
+.tool h3{font-size:16px}
+.tool p{font-size:12px;line-height:1.7;color:#999}
+.tool button{width:100%;padding:11px;background:#fff;color:#000;border:1px solid white;font-weight:bold}
+.tool button:hover{background:#111;color:#fff}
+
+.panel{padding:22px;border:1px solid #555;margin-top:25px}
+.panel h2{font-size:17px}
+.panel p{font-size:13px;line-height:1.8;color:#aaa}
+.input{display:block;width:100%;padding:12px;margin:12px 0;background:#050505;color:white;border:1px solid #555}
+textarea.input{min-height:160px;resize:vertical;font-size:12px}
+.action{padding:12px 16px;background:white;color:black;border:1px solid white;font-weight:bold}
+.action:hover{background:#111;color:white}
+.status{font-size:12px;color:#bbb;line-height:1.7;overflow-wrap:anywhere}
+footer{text-align:center;padding:25px 0;color:#666;font-size:11px}
+
+.overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:#000e}
+.login-box,.popup{width:min(100%,390px);padding:28px;border:1px solid white;background:#050505}
+.login-logo{text-align:center;font-size:30px;font-weight:bold;letter-spacing:6px}
+.login-subtitle{text-align:center;font-size:11px;color:#888;letter-spacing:2px;margin:12px 0 25px}
+.login-box label.field-label{display:block;margin:17px 0 8px;font-size:12px}
+.login-box input[type=text],.login-box input[type=password]{width:100%;padding:13px;background:#000;color:#fff;border:1px solid #444}
+.login-button{width:100%;padding:14px;margin-top:22px;background:#fff;color:#000;border:1px solid white;font-weight:bold}
+.login-error{min-height:18px;margin-top:14px;color:#ff8585;font-size:12px}
+.login-footer{text-align:center;margin-top:25px;color:#666;font-size:10px;letter-spacing:2px}
+.popup{text-align:center}
+.popup p{font-size:13px;line-height:1.8;color:#aaa}
+.popup .action{display:block;width:100%;margin-top:12px}
+.popup-close{margin-top:18px;background:transparent;border:0;color:#aaa;text-decoration:underline}
+
+#ownerPanel{margin-top:25px;padding:20px;border:1px solid white;background:#050505}
+#ownerPanel input{display:block;width:100%;margin:12px 0;padding:12px;background:#000;color:white;border:1px solid #444}
+.owner-button{padding:10px 14px;margin:5px 5px 5px 0;background:#fff;color:#000;border:0}
+.account-row{padding:12px 0;border-bottom:1px solid #333;overflow-wrap:anywhere}
+
+@media(max-width:600px){
+.page{padding-top:10px}
+.brand{font-size:19px;letter-spacing:3px}
+.profile{align-items:flex-start;gap:14px;padding:15px}
+.avatar{width:85px;height:85px}
+.profile-name{font-size:23px;margin-bottom:15px}
+.profile-grid{grid-template-columns:1fr;gap:11px}
+.info-item{font-size:12px}
+.menu-card{gap:13px;min-height:120px;padding:13px}
+.menu-icon{width:62px;height:70px;font-size:27px}
+.menu-content h3{font-size:16px}
+.menu-content p{font-size:12px}
+.arrow{font-size:25px}
+.tools-grid{grid-template-columns:1fr}
+.section-title h2{font-size:14px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="overlay">
+<section class="login-box">
+  <div class="login-logo">ZRAN</div>
+  <div class="login-subtitle">SECURE ACCESS SYSTEM</div>
+
+  <form id="loginForm">
+    <label class="field-label" for="loginUsername">USERNAME</label>
+    <input id="loginUsername" type="text" placeholder="Masukkan username" autocomplete="username" required>
+
+    <label class="field-label" for="loginPassword">PASSWORD</label>
+    <input id="loginPassword" type="password" placeholder="Masukkan password" autocomplete="current-password" required>
+
+    <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px">
+      <input id="showPassword" type="checkbox" style="width:auto">
+      Tampilkan password
+    </label>
+
+    <button class="login-button" type="submit">LOGIN →</button>
+    <div id="loginError" class="login-error" role="status"></div>
+  </form>
+
+  <div class="login-footer">ZRAN WEB · AUTHENTICATION</div>
+</section>
+</div>
+
+<!-- DASHBOARD -->
+<div class="page hidden" id="dashboard">
+
+<header class="header">
+  <div class="brand">ZRAN<span>.WEB</span></div>
+
+  <div class="header-right">
+    <span class="online">ONLINE</span>
+    <button id="logoutButton" class="menu-button" type="button">LOGOUT</button>
+
+    <div class="menu-wrap">
+      <button class="menu-button" id="menuButton" aria-label="Buka menu">⋮</button>
+
+      <nav class="dropdown" id="dropdown">
+        <a href="#home">⌂ Menu Utama</a>
+        <a href="#tools">⚙ Tools</a>
+        <a href="https://www.google.com" target="_blank" rel="noopener noreferrer">Google</a>
+        <a href="https://chatgpt.com" target="_blank" rel="noopener noreferrer">ChatGPT</a>
+        <a href="https://www.youtube.com" target="_blank" rel="noopener noreferrer">YouTube</a>
+        <a href="https://web.telegram.org" target="_blank" rel="noopener noreferrer">Telegram</a>
+        <a href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">TikTok</a>
+        <a href="https://snaptik.fi" target="_blank" rel="noopener noreferrer">TikTok Downloader</a>
+        <a href="https://poki.com" target="_blank" rel="noopener noreferrer">Games</a>
+        <a href="https://wordwall.net" target="_blank" rel="noopener noreferrer">Quiz Games</a>
+        <a href="https://ruangotp.io" target="_blank" rel="noopener noreferrer">web nokos</a>
+        <a href="https://hyrizz.com" target="_blank" rel="noopener noreferrer">apk jb</a>
+        <a href="https://www.mediafire.com/file/z9kgqrh0rgu6bw7/FILE_BLAST_ANTIBAN_BY_ZRAN.zip/file" target="_blank" rel="noopener noreferrer">file badak</a>
+        <a href="#about">Tentang</a>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<section class="card profile" id="home">
+  <img class="avatar" src="https://files.catbox.moe/ovd9pj.png" alt="Foto profil Zran">
+  <div class="profile-info">
+    <h1 class="profile-name" id="profileName">Zran</h1>
+
+    <div class="profile-grid">
+      <div class="info-item"><span>🌐</span><span class="info-value" id="language">ID Indonesia</span></div>
+      <div class="info-item"><span>◷</span><span class="info-value" id="clock">00:00:00</span></div>
+      <div class="info-item"><span>▯</span><span class="info-value" id="device">Perangkat</span></div>
+      <div class="info-item"><span>◉</span><span class="info-value" id="browser">Browser</span></div>
+      <div class="info-item"><span>▰</span><span class="info-value">Dashboard</span></div>
+      <div class="info-item"><span>▥</span><span class="info-value" id="connection">Online</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-title"><h2>MENU UTAMA</h2><small>SELECT MENU →</small></div>
+
+<a class="menu-card" href="https://web.telegram.org" target="_blank" rel="noopener noreferrer" data-watermark="◎">
+  <div class="menu-icon">🌐</div>
+  <div class="menu-content"><h3>Chat Global</h3><p>Ngobrol bareng semua pengguna web</p></div>
+  <div class="arrow">→</div>
+</a>
+
+<a class="menu-card" href="https://whatsapp.com/channel/0029VbDUT108qIzzAkndKA17" target="_blank" rel="noopener noreferrer" data-watermark="Z">
+  <div class="menu-icon">◉</div>
+  <div class="menu-content"><h3>Saluran Update</h3><p>Informasi update web dan fitur terbaru</p></div>
+  <div class="arrow">→</div>
+</a>
+
+<a class="menu-card" href="https://wa.me/6283857207168" target="_blank" rel="noopener noreferrer" data-watermark="@">
+  <div class="menu-icon">✉</div>
+  <div class="menu-content"><h3>Contact Owner</h3><p>Hubungi pemilik dashboard melalui WhatsApp</p></div>
+  <div class="arrow">→</div>
+</a>
+
+<section id="tools">
+  <div class="section-title"><h2>TOOLS CENTER</h2><small>UTILITY PANEL</small></div>
+
+  <div class="tools-grid">
+    <article class="tool">
+      <div class="tool-icon">◷</div><h3>Digital Clock</h3>
+      <p>Jam digital real-time zona WIB.</p>
+      <button type="button" onclick="showClock()">BUKA TOOLS →</button>
+    </article>
+
+    <article class="tool">
+      <div class="tool-icon">▤</div><h3>Text Converter</h3>
+      <p>Ubah teks menjadi huruf besar atau kecil.</p>
+      <button type="button" onclick="showConverter()">BUKA TOOLS →</button>
+    </article>
+
+    <article class="tool">
+      <div class="tool-icon">⌘</div><h3>Calculator</h3>
+      <p>Kalkulator matematika sederhana.</p>
+      <button type="button" onclick="showCalculator()">BUKA TOOLS →</button>
+    </article>
+
+    <article class="tool">
+      <div class="tool-icon">▣</div><h3>HTML Viewer</h3>
+      <p>Periksa HTML halaman yang kamu miliki izin untuk akses.</p>
+      <button type="button" onclick="showHTMLViewer()">BUKA TOOLS →</button>
+    </article>
+  </div>
+</section>
+
+<!-- OWNER CONTROL -->
+<section id="ownerPanel" class="hidden">
+  <h2>OWNER CONTROL</h2>
+  <p class="status">Buat akun pengguna. Akun pada versi ini hanya tersimpan di browser/perangkat ini.</p>
+
+  <form id="createAccountForm">
+    <input id="newUsername" type="text" placeholder="Username baru (3–30 karakter)" minlength="3" maxlength="30" required>
+    <input id="newPassword" type="password" placeholder="Password baru (minimal 6 karakter)" minlength="6" maxlength="100" required>
+    <button class="owner-button" type="submit">+ BUAT AKUN</button>
+  </form>
+
+  <p id="ownerMessage" class="status" role="status"></p>
+  <hr style="border-color:#333">
+  <h3>DAFTAR AKUN</h3>
+  <div id="accountList"></div>
+</section>
+
+<section class="panel hidden" id="toolPanel">
+  <h2 id="toolTitle">TOOLS</h2>
+  <div id="toolBody"></div>
+  <p class="status" id="toolStatus" role="status"></p>
+  <button class="action" type="button" onclick="closeTool()">TUTUP PANEL</button>
+</section>
+
+<section class="panel" id="about">
+  <h2>ABOUT ZRAN</h2>
+  <p>Aplikasi ini di rancang untuk membantu anda dan apklikasi ini bakalan update terus menerus dan anda wajib masuk saluran dan nanti ownee akan mengasih info di saluran.</p>
+  <p>VERSION 1.0 · SLAYER</p>
+</section>
+
+<footer>© <span id="year"></span> SLAYER — ALL RIGHTS RESERVED</footer>
+</div>
+
+<div class="overlay hidden" id="welcomePopup">
+  <section class="popup">
+    <h2>WELCOME TO ZRAN</h2>
+    <p>Selamat datang di dashboard Zran. Bergabung ke saluran untuk mendapatkan informasi pembaruan web.</p>
+    <a class="action" href="https://whatsapp.com/channel/0029VbDtH278fewqv6NovT0i" target="_blank" rel="noopener noreferrer">GABUNG SALURAN WHATSAPP</a>
+    <button class="popup-close" type="button" onclick="closeWelcome()">Lewati dan masuk ke dashboard</button>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const OWNER_USERNAME = "AZRAN";
+const OWNER_PASSWORD = "1212";
+const STORAGE_KEY = "zran_demo_accounts_v1";
+const $ = id => document.getElementById(id);
+
+function loadAccounts() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(data) ? data.filter(a =>
+      a && typeof a.username === "string" &&
+      typeof a.password === "string"
+    ) : [];
+  } catch (error) {
+    console.error("Gagal membaca akun:", error);
+    return [];
+  }
+}
+
+function saveAccounts(accounts) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    return Array.isArray(saved);
+  } catch (error) {
+    console.error("Gagal menyimpan akun:", error);
+    return false;
+  }
+}
+
+function showDashboard(username, role) {
+  $("loginScreen").classList.add("hidden");
+  $("dashboard").classList.remove("hidden");
+  $("ownerPanel").classList.toggle("hidden", role !== "owner");
+  $("profileName").textContent = username;
+
+  if (role === "owner") renderAccounts();
+
+  $("welcomePopup").classList.remove("hidden");
+}
+
+function logout() {
+  $("dashboard").classList.add("hidden");
+  $("welcomePopup").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
+  $("ownerPanel").classList.add("hidden");
+  $("loginForm").reset();
+  $("loginError").textContent = "";
+}
+
+$("loginForm").addEventListener("submit", event => {
+  event.preventDefault();
+
+  const username = $("loginUsername").value.trim();
+  const password = $("loginPassword").value;
+
+  if (username.toUpperCase() === OWNER_USERNAME &&
+      password === OWNER_PASSWORD) {
+    showDashboard(OWNER_USERNAME, "owner");
+    return;
+  }
+
+  const account = loadAccounts().find(item =>
+    item.username.toLowerCase() === username.toLowerCase() &&
+    item.password === password
+  );
+
+  if (account) {
+    showDashboard(account.username, "user");
+    return;
+  }
+
+  $("loginError").textContent = "Username atau password salah.";
+});
+
+$("showPassword").addEventListener("change", () => {
+  $("loginPassword").type =
+    $("showPassword").checked ? "text" : "password";
+});
+
+$("logoutButton").addEventListener("click", logout);
+
+$("createAccountForm").addEventListener("submit", event => {
+  event.preventDefault();
+  $("ownerMessage").textContent = "";
+
+  const username = $("newUsername").value.trim();
+  const password = $("newPassword").value;
+
+  if (!/^[a-zA-Z0-9_-]{3,30}$/.test(username)) {
+    $("ownerMessage").textContent =
+      "Username harus 3–30 karakter dan hanya berisi huruf, angka, _ atau -.";
+    return;
+  }
+
+  if (password.length < 6 || password.length > 100) {
+    $("ownerMessage").textContent =
+      "Password harus berisi 6–100 karakter.";
+    return;
+  }
+
+  const accounts = loadAccounts();
+
+  if (username.toUpperCase() === OWNER_USERNAME ||
+      accounts.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+    $("ownerMessage").textContent =
+      "Username sudah digunakan. Pilih username lain.";
+    return;
+  }
+
+  accounts.push({username, password});
+
+  if (!saveAccounts(accounts)) {
+    $("ownerMessage").textContent =
+      "Gagal menyimpan akun. Browser mungkin membatasi penyimpanan lokal.";
+    return;
+  }
+
+  $("createAccountForm").reset();
+  $("ownerMessage").textContent =
+    "Akun " + username + " berhasil dibuat.";
+  renderAccounts();
+});
+
+function renderAccounts() {
+  const list = $("accountList");
+  list.replaceChildren();
+
+  const accounts = loadAccounts();
+
+  if (!accounts.length) {
+    list.textContent = "Belum ada akun pengguna.";
+    return;
+  }
+
+  accounts.forEach(account => {
+    const row = document.createElement("div");
+    row.className = "account-row";
+
+    const name = document.createElement("strong");
+    name.textContent = account.username;
+
+    const remove = document.createElement("button");
+    remove.className = "owner-button";
+    remove.type = "button";
+    remove.textContent = "HAPUS AKUN";
+
+    remove.addEventListener("click", () => {
+      const updated = loadAccounts().filter(
+        a => a.username !== account.username
+      );
+
+      if (!saveAccounts(updated)) {
+        $("ownerMessage").textContent = "Akun gagal dihapus.";
+        return;
+      }
+
+      $("ownerMessage").textContent =
+        "Akun " + account.username + " telah dihapus.";
+      renderAccounts();
+    });
+
+    row.append(name, document.createElement("br"), remove);
+    list.appendChild(row);
+  });
+}
+
+$("menuButton").addEventListener("click", event => {
+  event.stopPropagation();
+  $("dropdown").classList.toggle("show");
+});
+
+document.addEventListener("click", event => {
+  if (!event.target.closest(".menu-wrap")) {
+    $("dropdown").classList.remove("show");
+  }
+});
+
+function updateClock() {
+  $("clock").textContent = new Intl.DateTimeFormat("id-ID", {
+    timeZone:"Asia/Jakarta",
+    hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+  }).format(new Date());
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+const ua = navigator.userAgent;
+
+$("device").textContent =
+  /Android/i.test(ua) ? "Android" :
+  /iPhone|iPad/i.test(ua) ? "iOS" :
+  /Windows/i.test(ua) ? "Windows" :
+  /Macintosh/i.test(ua) ? "Mac" : "Perangkat Web";
+
+$("browser").textContent =
+  /Edg\//i.test(ua) ? "Edge" :
+  /OPR\//i.test(ua) ? "Opera" :
+  /Firefox\//i.test(ua) ? "Firefox" :
+  /Chrome\//i.test(ua) ? "Chrome" :
+  /Safari\//i.test(ua) ? "Safari" : "Browser";
+
+$("language").textContent = (navigator.language || "id-ID").toUpperCase();
+$("year").textContent = new Date().getFullYear();
+
+function updateConnection() {
+  $("connection").textContent = navigator.onLine ? "Online" : "Offline";
+}
+
+updateConnection();
+window.addEventListener("online", updateConnection);
+window.addEventListener("offline", updateConnection);
+
+window.closeWelcome = () => $("welcomePopup").classList.add("hidden");
+
+window.closeTool = () => {
+  $("toolPanel").classList.add("hidden");
+  $("toolBody").replaceChildren();
+};
+
+function openTool(title, html) {
+  $("toolTitle").textContent = title;
+  $("toolBody").innerHTML = html;
+  $("toolStatus").textContent = "";
+  $("toolPanel").classList.remove("hidden");
+  $("toolPanel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+window.showClock = () => {
+  openTool("DIGITAL CLOCK",
+    '<p>Waktu saat ini (WIB):</p><h2 id="largeClock">--:--:--</h2>');
+
+  const tick = () => {
+    const el = $("largeClock");
+    if (!el || !el.isConnected) return;
+
+    el.textContent = new Intl.DateTimeFormat("id-ID", {
+      timeZone:"Asia/Jakarta",
+      hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+    }).format(new Date());
+  };
+
+  tick();
+  const timer = setInterval(() => {
+    if (!$("largeClock") || !$("largeClock").isConnected) {
+      clearInterval(timer);
+    } else {
+      tick();
+    }
+  }, 1000);
+};
+
+window.showConverter = () => openTool("TEXT CONVERTER", `
+  <label for="convertInput">Masukkan teks:</label>
+  <textarea class="input" id="convertInput" placeholder="Tulis teks di sini..."></textarea>
+
+  <button class="action" type="button" onclick="convertText('upper')">HURUF BESAR</button>
+  <button class="action" type="button" onclick="convertText('lower')">huruf kecil</button>
+
+  <textarea class="input" id="convertOutput" placeholder="Hasil konversi..." readonly></textarea>
+  <button class="action" type="button" onclick="copyConvertedText()">SALIN HASIL</button>
+`);
+
+window.convertText = mode => {
+  const value = $("convertInput").value;
+  $("convertOutput").value =
+    mode === "upper" ? value.toUpperCase() : value.toLowerCase();
+};
+
+window.copyConvertedText = async () => {
+  const out = $("convertOutput");
+
+  if (!out.value) {
+    $("toolStatus").textContent = "Tidak ada teks untuk disalin.";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(out.value);
+    $("toolStatus").textContent = "Teks berhasil disalin.";
+  } catch {
+    out.select();
+    $("toolStatus").textContent = "Pilih teks lalu salin secara manual.";
+  }
+};
+
+window.showCalculator = () => openTool("CALCULATOR", `
+  <label for="calcInput">Perhitungan matematika:</label>
+  <input class="input" id="calcInput" placeholder="Contoh: (10 + 5) * 2">
+  <button class="action" type="button" onclick="calculate()">HITUNG</button>
+  <p id="calcResult" class="status"></p>
+`);
+
+window.calculate = () => {
+  const expression = $("calcInput").value.trim();
+
+  if (!expression || !/^[0-9+*/().%\\s-]+$/.test(expression)) {
+    $("calcResult").textContent = "Masukkan perhitungan yang valid.";
+    return;
+  }
+
+  try {
+    const result = Function('"use strict";return (' + expression + ')')();
+
+    $("calcResult").textContent = Number.isFinite(result)
+      ? "HASIL: " + result
+      : "Hasil tidak valid.";
+  } catch {
+    $("calcResult").textContent = "Format perhitungan salah.";
+  }
+};
+
+window.showHTMLViewer = () => openTool("HTML VIEWER", `
+  <p>Gunakan hanya pada halaman yang kamu miliki atau berhak periksa. Situs lain mungkin membatasi akses melalui CORS.</p>
+
+  <input class="input" id="htmlURL" type="url" placeholder="https://contoh.com">
+
+  <button class="action" type="button" onclick="fetchHTML()">AMBIL HTML</button>
+
+  <textarea class="input" id="htmlResult" placeholder="Hasil HTML..." readonly></textarea>
+
+  <button class="action" type="button" onclick="copyHTML()">SALIN HTML</button>
+`);
+
+window.fetchHTML = async () => {
+  let url;
+
+  try {
+    url = new URL($("htmlURL").value.trim());
+
+    if (!["https:", "http:"].includes(url.protocol)) {
+      throw new Error();
+    }
+  } catch {
+    $("toolStatus").textContent =
+      "Masukkan URL HTTP atau HTTPS yang valid.";
+    return;
+  }
+
+  $("toolStatus").textContent = "Sedang mengambil HTML...";
+  $("htmlResult").value = "";
+
+  try {
+    const response = await fetch(url.href);
+
+    if (!response.ok) {
+      throw new Error("Permintaan gagal.");
+    }
+
+    $("htmlResult").value = await response.text();
+    $("toolStatus").textContent = "HTML berhasil diambil.";
+  } catch {
+    $("toolStatus").textContent =
+      "Gagal mengambil HTML. Server mungkin memblokir CORS.";
+  }
+};
+
+window.copyHTML = async () => {
+  const out = $("htmlResult");
+
+  if (!out.value) {
+    $("toolStatus").textContent = "Belum ada HTML untuk disalin.";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(out.value);
+    $("toolStatus").textContent = "HTML berhasil disalin.";
+  } catch {
+    out.select();
+    $("toolStatus").textContent =
+      "Pilih teks lalu salin secara manual.";
+  }
+};
+
+})();
+</script>
+</body>
+</html>
